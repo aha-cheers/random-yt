@@ -150,22 +150,13 @@
 				<button id="btn-next">next</button>
 			</div>
 		</div>
-		<script src="https://www.youtube.com/iframe_api/"></script>
 		<script>
 			const App = (() => {
 				let player;
 				const overlay = document.getElementById('overlay');
 				const noise = new Audio('noise.mp3');
 				noise.loop = true;
-				const prefixes = [
-					'DSC',
-					'IMG',
-					'100',
-					'VID',
-					'MVI',
-					'MOV',
-					'GOPR'
-				];
+				const prefixes = ['DSC', 'IMG', '100', 'VID', 'MVI'];
 
 				const seperators = ['', ' ', '_'];
 
@@ -211,16 +202,16 @@
 					return `${prefix}${seperator}${number}`;
 				};
 
-				const onReady = () => {
+				const onReady = e => {
 					document
 						.getElementById('btn-previous')
 						.addEventListener('click', () =>
-							player.previousVideo()
+							e.target.previousVideo()
 						);
 					document
 						.getElementById('btn-next')
-						.addEventListener('click', () => player.nextVideo());
-					player.loadPlaylist({
+						.addEventListener('click', () => e.target.nextVideo());
+					e.target.loadPlaylist({
 						listType: 'search',
 						list: getRandomSearchString(),
 						index: (Math.random() * 3) | 0,
@@ -270,6 +261,11 @@
 					previousVideo: () => player.previousVideo()
 				};
 			})();
+
+			const tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			const firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 			function onYouTubeIframeAPIReady() {
 				App.setPlayer(
