@@ -191,10 +191,7 @@
 				const pickRandom = arr => arr[(Math.random() * arr.length) | 0];
 
 				const getRandomFourDigitNumberStringWithKetchupIMeanPadStart = () =>
-					((Math.random() * 9999) | 0)
-						.toString()
-						.padStart(3, '0')
-						.slice(-4);
+					((Math.random() * 9999) | 0).toString().padStart(4, '0');
 
 				const getRandomSearchString = () => {
 					const prefix = pickRandom(prefixes);
