@@ -146,7 +146,6 @@
 				<div class="bar bottom"><div id="bar-bottom"></div></div>
 			</div>
 			<div id="controls">
-				<button id="btn-previous">previous</button>
 				<button id="btn-next">next</button>
 			</div>
 		</div>
@@ -202,11 +201,6 @@
 
 				const onReady = e => {
 					document
-						.getElementById('btn-previous')
-						.addEventListener('click', () =>
-							player.previousVideo()
-						);
-					document
 						.getElementById('btn-next')
 						.addEventListener('click', () => player.nextVideo());
 					player.loadPlaylist({
@@ -233,7 +227,6 @@
 						if (
 							history.includes(e.target.getVideoData().video_id)
 						) {
-							console.log('end reached; loading new playlist');
 							onReady(e);
 							return;
 						}
@@ -266,8 +259,7 @@
 					setPlayer: yt => (player = yt),
 					onReady: e => onReady(e),
 					onStateChange: e => onStateChange(e),
-					nextVideo: () => player.nextVideo(),
-					previousVideo: () => player.previousVideo()
+					nextVideo: () => player.nextVideo()
 				};
 			}
 
