@@ -222,7 +222,8 @@
 
 				const onStateChange = e => {
 					const timer = setTimeout(() => {
-						if (e.target.getPlayerState() == -1) onReady(e);
+						if (e.target.getPlayerState() == -1)
+							e.target.nextVideo();
 						clearTimeout(timer);
 						return;
 					}, 3000);
