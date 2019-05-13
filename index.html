@@ -80,8 +80,7 @@
 				border: 0;
 				font-size: 2rem;
 				font-family: 'Press Start 2P', cursive;
-				color: #fff;
-				text-shadow: 2px 2px #000;
+				color: transparent;
 			}
 
 			.bar {
@@ -132,6 +131,14 @@
 				font-size: 2rem;
 			}
 
+			#video-id {
+				position: absolute;
+				top: 76px;
+				right: 16px;
+				font-size: 2rem;
+				z-index: 2;
+			}
+
 			@media (max-width: 600px) {
 				#controls > button {
 					font-size: 1rem;
@@ -145,6 +152,7 @@
 	</head>
 	<body>
 		<div id="app">
+			<div id="video-id"></div>
 			<div id="overlay">
 				<span class="loading">loading random video</span>
 			</div>
@@ -159,147 +167,139 @@
 			</div>
 		</div>
 		<script>
-			function App() {
-				let player;
-				const history = [];
-				const overlay = document.getElementById('overlay');
-				const noise = new Audio('noise.mp3');
-				noise.loop = true;
-				const prefixes = ['DSC', 'IMG', '100', 'VID', 'MVI'];
-
-				const seperators = ['', ' ', '_'];
-
-				const Progress = (...elements) => {
-					let ticker = null;
-
-					if (elements.length) {
-						return {
-							clear: () => clearInterval(ticker),
-							start: () => {
-								ticker = setInterval(() => {
-									elements
-										.map(element =>
-											document.getElementById(element)
-										)
-										.forEach(element => {
-											element.style.width = `${(player.getCurrentTime() /
-												player.getDuration()) *
-												100}%`;
-										});
-								}, 1000 / 30);
-							}
-						};
-					} else {
-						throw 'pass one or multiple output element ids';
-					}
-				};
-
-				const progress = Progress('bar-top', 'bar-bottom');
-
-				const pickRandom = arr => arr[(Math.random() * arr.length) | 0];
-
-				const getRandomFourDigitNumberStringWithKetchupIMeanPadStart = () =>
-					((Math.random() * 9999) | 0).toString().padStart(4, '0');
-
-				const getRandomSearchString = () => {
-					const prefix = pickRandom(prefixes);
-					const seperator = pickRandom(seperators);
-					const number = getRandomFourDigitNumberStringWithKetchupIMeanPadStart();
-					return `${prefix}${seperator}${number}`;
-				};
-
-				const onReady = e => {
-					document
-						.getElementById('btn-next')
-						.addEventListener('click', () => player.nextVideo());
-					player.loadPlaylist({
-						listType: 'search',
-						list: getRandomSearchString(),
-						index: (Math.random() * 3) | 0,
-						startSeconds: '0'
-					});
-				};
-
-				const onStateChange = e => {
-					const timer = setTimeout(() => {
-						if (e.target.getPlayerState() == -1)
-							e.target.nextVideo();
-						clearTimeout(timer);
-						return;
-					}, 3000);
-
-					if (e.data == YT.PlayerState.ENDED) {
-						onReady(e);
-						return;
-					}
-
-					if (e.data == YT.PlayerState.PLAYING) {
-						if (
-							history.includes(e.target.getVideoData().video_id)
-						) {
-							onReady(e);
-							return;
-						}
-						let pause = noise.pause();
-						if (pause !== undefined)
-							pause
-								.then(() => (noise.currentTime = 0))
-								.catch(error => {});
-						overlay.classList.add('hidden');
-						progress.start();
-						history.push(e.target.getVideoData().video_id);
-					} else {
-						play = noise.play();
-						if (play !== undefined)
-							play.then(() => {}).catch(error => {});
-						overlay.classList.remove('hidden');
-						progress.clear();
-					}
-
-					if (
-						e.data == YT.PlayerState.PLAYING &&
-						e.target.getDuration() > 120
-					) {
-						e.target.nextVideo();
-						return;
-					}
-				};
-
-				return {
-					setPlayer: yt => (player = yt),
-					onReady: e => onReady(e),
-					onStateChange: e => onStateChange(e),
-					nextVideo: () => player.nextVideo()
-				};
-			}
-
 			const tag = document.createElement('script');
 			tag.src = 'https://www.youtube.com/iframe_api';
 			const firstScriptTag = document.getElementsByTagName('script')[0];
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-			let app;
+			const prefixes = ['DSC', 'IMG', '100', 'VID', 'MVI', 'MOV', 'GOPR'];
+			const seperators = ['', ' ', '_'];
+			const noise = new Audio('noise.mp3');
+			noise.loop = true;
+
+			let player;
+			const history = [];
+			/*
+			document
+				.getElementById('btn-next')
+				.addEventListener('click', () => player.nextVideo());
+			*/
 
 			function onYouTubeIframeAPIReady() {
-				let app = new App();
-				app.setPlayer(
-					new YT.Player('player', {
-						playerVars: {
-							rel: 0,
-							showinfo: 0,
-							ecver: 2,
-							controls: 0,
-							autoplay: 1,
-							modestbranding: 1,
-							showinfo: 0,
-							iv_load_policy: 3
-						},
-						events: {
-							onReady: app.onReady,
-							onStateChange: app.onStateChange
-						}
-					})
-				);
+				player = new YT.Player('player', {
+					playerVars: {
+						rel: 0,
+						showinfo: 0,
+						ecver: 2,
+						controls: 0,
+						modestbranding: 1,
+						showinfo: 0,
+						iv_load_policy: 3,
+						enablejsapi: 1
+					},
+					events: {
+						onReady,
+						onStateChange
+					}
+				});
+			}
+
+			function onReady(e) {
+				document
+					.getElementById('btn-next')
+					.addEventListener('click', () => {
+						e.target.nextVideo();
+					});
+				e.target.loadPlaylist({
+					listType: 'search',
+					list: getRandomSearchString(),
+					index: (Math.random() * 3) | 0,
+					startSeconds: '0'
+				});
+			}
+
+			function onStateChange(e) {
+				console.log(e);
+				const {
+					UNSTARTED,
+					ENDED,
+					PLAYING,
+					PAUSED,
+					BUFFERING,
+					CUED
+				} = YT.PlayerState;
+				const state = e.data;
+				const timer = setTimeout(() => {
+					if (e.target.getPlayerState() == UNSTARTED) onReady(e);
+				}, 4000);
+
+				if (state === ENDED) {
+					return onReady(e);
+				}
+
+				if (state === PLAYING && e.target.getDuration() > 120) {
+					return e.target.nextVideo();
+				}
+
+				const elements = ['bar-top', 'bar-bottom'];
+
+				function animateProgress() {
+					elements
+						.map(element => document.getElementById(element))
+						.forEach(element => {
+							element.style.width = `${(player.getCurrentTime() /
+								player.getDuration()) *
+								100}%`;
+						});
+					requestAnimationFrame(animateProgress);
+				}
+
+				let bars;
+
+				if (state === PLAYING) {
+					document.getElementById(
+						'video-id'
+					).innerHTML = e.target.getVideoData().video_id;
+					bars = animateProgress();
+
+					if (history.includes(e.target.getVideoData().video_id))
+						return onReady(e);
+					document.getElementById('overlay').classList.add('hidden');
+					let pause = noise.pause();
+					if (pause !== undefined)
+						pause
+							.then(() => (noise.currentTime = 0))
+							.catch(error => {});
+					e.target.playVideo();
+					//progress.start();
+					history.push(e.target.getVideoData().video_id);
+				} else {
+					window.cancelAnimationFrame(bars);
+					play = noise.play();
+					if (play !== undefined)
+						play.then(() => {}).catch(error => {});
+					document
+						.getElementById('overlay')
+						.classList.remove('hidden');
+					//progress.clear();
+				}
+			}
+
+			function getRandomSearchString() {
+				const prefix = pickRandom(prefixes);
+				const seperator = pickRandom(seperators);
+				const number = getRandomFourDigitNumberString();
+				const query = `${prefix}${seperator}${number}`;
+				console.log(query);
+				return query;
+			}
+
+			function getRandomFourDigitNumberString() {
+				return ((Math.random() * 9999) | 0).toString().padStart(4, '0');
+			}
+
+			function pickRandom(arr) {
+				return arr[(Math.random() * arr.length) | 0];
 			}
 		</script>
 	</body>
