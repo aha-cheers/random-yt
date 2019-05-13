@@ -14,9 +14,11 @@
 			html {
 				height: 100%;
 			}
+
 			body {
 				margin: 0;
 				overflow: hidden;
+				font-size: 16px;
 				font-family: 'Press Start 2P', cursive;
 				color: #fff;
 				text-shadow: 2px 2px #000;
@@ -73,14 +75,13 @@
 
 			#controls > button {
 				height: 60px;
-				font-size: 32px;
+				background: transparent;
 				user-select: none;
 				border: 0;
-				background: transparent;
+				font-size: 2rem;
 				font-family: 'Press Start 2P', cursive;
 				color: #fff;
 				text-shadow: 2px 2px #000;
-				margin: 0 32px;
 			}
 
 			.bar {
@@ -122,14 +123,22 @@
 				justify-content: center;
 				align-items: center;
 			}
+
 			.hidden {
 				display: none !important;
+			}
+
+			.loading {
+				font-size: 2rem;
 			}
 
 			@media (max-width: 600px) {
 				#controls > button {
 					font-size: 1rem;
-					margin: 0 16px;
+				}
+
+				.loading {
+					font-size: 1rem;
 				}
 			}
 		</style>
@@ -137,7 +146,7 @@
 	<body>
 		<div id="app">
 			<div id="overlay">
-				<span>loading random video</span>
+				<span class="loading">loading random video</span>
 			</div>
 			<div id="block"></div>
 			<div class="player">
