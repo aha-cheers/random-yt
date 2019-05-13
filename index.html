@@ -73,7 +73,6 @@
 
 			#controls > button {
 				height: 60px;
-				width: 200px;
 				font-size: 32px;
 				user-select: none;
 				border: 0;
@@ -81,6 +80,7 @@
 				font-family: 'Press Start 2P', cursive;
 				color: #fff;
 				text-shadow: 2px 2px #000;
+				margin: 0 32px;
 			}
 
 			.bar {
@@ -124,6 +124,12 @@
 			}
 			.hidden {
 				display: none !important;
+			}
+
+			@media (max-width: 600px) {
+				#controls > button {
+					font-size: 1rem;
+				}
 			}
 		</style>
 	</head>
