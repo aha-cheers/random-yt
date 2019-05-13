@@ -151,8 +151,9 @@
 			</div>
 		</div>
 		<script>
-			const App = (() => {
+			function App() {
 				let player;
+				const history = [];
 				const overlay = document.getElementById('overlay');
 				const noise = new Audio('noise.mp3');
 				noise.loop = true;
@@ -206,12 +207,12 @@
 					document
 						.getElementById('btn-previous')
 						.addEventListener('click', () =>
-							e.target.previousVideo()
+							player.previousVideo()
 						);
 					document
 						.getElementById('btn-next')
-						.addEventListener('click', () => e.target.nextVideo());
-					e.target.loadPlaylist({
+						.addEventListener('click', () => player.nextVideo());
+					player.loadPlaylist({
 						listType: 'search',
 						list: getRandomSearchString(),
 						index: (Math.random() * 3) | 0,
@@ -221,12 +222,24 @@
 
 				const onStateChange = e => {
 					const timer = setTimeout(() => {
-						if (player.getPlayerState() == -1) player.nextVideo();
+						if (e.target.getPlayerState() == -1) onReady(e);
 						clearTimeout(timer);
+						return;
 					}, 3000);
 
+					if (e.data == YT.PlayerState.ENDED) {
+						onReady(e);
+						return;
+					}
+
 					if (e.data == YT.PlayerState.PLAYING) {
-						console.log(player.getVideoData().video_id);
+						if (
+							history.includes(e.target.getVideoData().video_id)
+						) {
+							console.log('end reached; loading new playlist');
+							onReady(e);
+							return;
+						}
 						let pause = noise.pause();
 						if (pause !== undefined)
 							pause
@@ -234,6 +247,7 @@
 								.catch(error => {});
 						overlay.classList.add('hidden');
 						progress.start();
+						history.push(e.target.getVideoData().video_id);
 					} else {
 						play = noise.play();
 						if (play !== undefined)
@@ -242,13 +256,11 @@
 						progress.clear();
 					}
 
-					if (e.data == YT.PlayerState.ENDED) {
-						onReady(e);
-						return;
-					}
-
-					if (player.getDuration() > 120) {
-						player.nextVideo();
+					if (
+						e.data == YT.PlayerState.PLAYING &&
+						e.target.getDuration() > 120
+					) {
+						e.target.nextVideo();
 						return;
 					}
 				};
@@ -260,15 +272,18 @@
 					nextVideo: () => player.nextVideo(),
 					previousVideo: () => player.previousVideo()
 				};
-			})();
+			}
 
 			const tag = document.createElement('script');
 			tag.src = 'https://www.youtube.com/iframe_api';
 			const firstScriptTag = document.getElementsByTagName('script')[0];
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+			let app;
+
 			function onYouTubeIframeAPIReady() {
-				App.setPlayer(
+				let app = new App();
+				app.setPlayer(
 					new YT.Player('player', {
 						playerVars: {
 							rel: 0,
@@ -281,8 +296,8 @@
 							iv_load_policy: 3
 						},
 						events: {
-							onReady: App.onReady,
-							onStateChange: App.onStateChange
+							onReady: app.onReady,
+							onStateChange: app.onStateChange
 						}
 					})
 				);
