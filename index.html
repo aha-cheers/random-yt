@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<title>Random Youtube</title>
+		<style>
+			body,
+			html {
+				height: 100%;
+			}
+			body {
+				margin: 0;
+				overflow: hidden;
+			}
+
+			iframe {
+				height: 100%;
+				width: 100%;
+			}
+
+			#app {
+				position: relative;
+				height: 100%;
+				overflow: hidden;
+				display: flex;
+				align-items: center;
+				background: #000;
+			}
+
+			.player {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			#block {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				z-index: 1;
+				top: 0;
+				left: 0;
+			}
+
+			#controls {
+				position: absolute;
+				left: 0;
+				top: 0;
+				height: 100%;
+				width: 100%;
+				z-index: 4;
+				display: flex;
+				align-items: flex-end;
+				justify-content: center;
+			}
+
+			#controls > button {
+				height: 60px;
+				width: 200px;
+				font-size: 32px;
+				user-select: none;
+				border: 0;
+				background: transparent;
+				color: #fff;
+				text-shadow: 2px 2px #000;
+			}
+
+			.bar {
+				position: absolute;
+				height: 60px;
+				background: #000;
+				width: 100%;
+				left: 0;
+				z-index: 4;
+			}
+
+			.bar.top {
+				top: 0px;
+			}
+
+			.bar.bottom {
+				bottom: 0px;
+			}
+
+			#bar-top,
+			#bar-bottom {
+				height: 100%;
+				background: url('bar.gif');
+				background-size: auto 100%eeeeeeeeee;
+			}
+
+			#overlay {
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+				z-index: 666;
+				background: url('bg.gif');
+				background-size: 100% 120%;
+				background-position: center center;
+			}
+			.hidden {
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app">
+			<div id="overlay"></div>
+			<div id="block"></div>
+			<div class="player">
+				<div class="bar top"><div id="bar-top"></div></div>
+				<div id="player"></div>
+				<div class="bar bottom"><div id="bar-bottom"></div></div>
+			</div>
+			<div id="controls">
+				<button id="btn-previous">previous</button>
+				<button id="btn-next">next</button>
+			</div>
+		</div>
+		<script>
+			const App = (() => {
+				let player;
+				const overlay = document.getElementById('overlay');
+				const noise = new Audio('noise.mp3');
+				noise.loop = true;
+				const prefixes = [
+					'DSC',
+					'IMG',
+					'100',
+					'VID',
+					'MVI',
+					'MOV',
+					'GOPR'
+				];
+
+				const seperators = ['', ' ', '_'];
+
+				const Progress = (...elements) => {
+					let ticker = null;
+
+					if (elements.length) {
+						return {
+							clear: () => clearInterval(ticker),
+							start: () => {
+								ticker = setInterval(() => {
+									elements
+										.map(element =>
+											document.getElementById(element)
+										)
+										.forEach(element => {
+											element.style.width = `${(player.getCurrentTime() /
+												player.getDuration()) *
+												100}%`;
+										});
+								}, 1000 / 30);
+							}
+						};
+					} else {
+						throw 'pass one or multiple output element ids';
+					}
+				};
+
+				const progress = Progress('bar-top', 'bar-bottom');
+
+				const pickRandom = arr => arr[(Math.random() * arr.length) | 0];
+
+				const getRandomFourDigitNumberStringWithKetchupIMeanPadStart = () =>
+					((Math.random() * 9999) | 0)
+						.toString()
+						.padStart(3, '0')
+						.slice(-4);
+
+				const getRandomSearchString = () => {
+					const prefix = pickRandom(prefixes);
+					const seperator = pickRandom(seperators);
+					const number = getRandomFourDigitNumberStringWithKetchupIMeanPadStart();
+					return `${prefix}${seperator}${number}`;
+				};
+
+				const onReady = () => {
+					document
+						.getElementById('btn-previous')
+						.addEventListener('click', () =>
+							player.previousVideo()
+						);
+					document
+						.getElementById('btn-next')
+						.addEventListener('click', () => player.nextVideo());
+					player.loadPlaylist({
+						listType: 'search',
+						list: getRandomSearchString(),
+						index: (Math.random() * 3) | 0,
+						startSeconds: '0'
+					});
+				};
+
+				const onStateChange = e => {
+					const timer = setTimeout(() => {
+						if (player.getPlayerState() == -1) player.nextVideo();
+						clearTimeout(timer);
+					}, 3000);
+
+					if (e.data == YT.PlayerState.PLAYING) {
+						console.log(player.getVideoData().video_id);
+						let pause = noise.pause();
+						if (pause !== undefined)
+							pause
+								.then(() => (noise.currentTime = 0))
+								.catch(error => {});
+						overlay.classList.add('hidden');
+						progress.start();
+					} else {
+						play = noise.play();
+						if (play !== undefined)
+							play.then(() => {}).catch(error => {});
+						overlay.classList.remove('hidden');
+						progress.clear();
+					}
+
+					if (e.data == YT.PlayerState.ENDED) {
+						onReady(e);
+						return;
+					}
+
+					if (player.getDuration() > 120) {
+						player.nextVideo();
+						return;
+					}
+				};
+
+				return {
+					setPlayer: yt => (player = yt),
+					onReady: e => onReady(e),
+					onStateChange: e => onStateChange(e),
+					nextVideo: () => player.nextVideo(),
+					previousVideo: () => player.previousVideo()
+				};
+			})();
+
+			const tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			const firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+			function onYouTubeIframeAPIReady() {
+				App.setPlayer(
+					new YT.Player('player', {
+						playerVars: {
+							rel: 0,
+							showinfo: 0,
+							ecver: 2,
+							controls: 0,
+							autoplay: 1,
+							modestbranding: 1,
+							showinfo: 0,
+							iv_load_policy: 3
+						},
+						events: {
+							onReady: App.onReady,
+							onStateChange: App.onStateChange
+						}
+					})
+				);
+			}
+		</script>
+	</body>
+</html>
