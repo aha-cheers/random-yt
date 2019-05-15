@@ -135,9 +135,12 @@
 			#video-id {
 				position: absolute;
 				top: 76px;
-				right: 16px;
+				left: 0;
 				font-size: 2rem;
 				z-index: 6;
+				display: flex;
+				width: 98%;
+				justify-content: flex-end;
 			}
 
 			#video-id::selection {
@@ -166,6 +169,11 @@
 				}
 
 				.loading {
+					font-size: 1rem;
+				}
+
+				#video-id {
+					justify-content: center;
 					font-size: 1rem;
 				}
 			}
