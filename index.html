@@ -274,7 +274,7 @@
 					return onReady(e);
 				}
 
-				if (state === UNSTARTED && e.target.getDuration() > 120) {
+				if (state === PLAYING && e.target.getDuration() > 120) {
 					return e.target.nextVideo();
 				}
 
