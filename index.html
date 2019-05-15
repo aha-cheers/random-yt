@@ -209,7 +209,6 @@
 			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 			let player;
-			const history = [];
 			let timer;
 			let progressBars;
 			const progressBarIds = ['bar-top', 'bar-bottom'];
@@ -279,12 +278,6 @@
 				}
 
 				if (state === PLAYING) {
-					console.log(e.target.getVideoData().video_id);
-
-					if (history.includes(e.target.getVideoData().video_id)) {
-						return onReady(e);
-					}
-
 					document.getElementById(
 						'video-id'
 					).innerHTML = e.target.getVideoData().video_id;
@@ -300,8 +293,6 @@
 					e.target.playVideo();
 
 					document.getElementById('overlay').classList.add('hidden');
-
-					history.push(e.target.getVideoData().video_id);
 				} else {
 					document
 						.getElementById('overlay')
