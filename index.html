@@ -210,6 +210,7 @@
 
 			let player;
 			const history = [];
+			let timer;
 			let progressBars;
 			const progressBarIds = ['bar-top', 'bar-bottom'];
 
@@ -260,11 +261,14 @@
 				const state = e.data;
 
 				//load new playlist if video isn't playing after 4 sec
-				if (state == UNSTARTED) {
-					const timer = setTimeout(() => {
+
+				clearTimeout(timer);
+				if (state == BUFFERING) {
+					timer = setTimeout(() => {
 						const _state = e.target.getPlayerState();
-						if (_state == UNSTARTED || _state == BUFFERING)
+						if (_state == BUFFERING) {
 							onReady(e);
+						}
 					}, 4000);
 				}
 
@@ -273,11 +277,12 @@
 				}
 
 				//2 min max duration
-				if (state === PLAYING && e.target.getDuration() > 120) {
+				if (state === UNSTARTED && e.target.getDuration() > 120) {
 					return e.target.nextVideo();
 				}
 
 				if (state === PLAYING) {
+					console.log(e.target.getVideoData().video_id);
 					//check if history includes next video
 					if (history.includes(e.target.getVideoData().video_id)) {
 						return onReady(e);
@@ -291,8 +296,6 @@
 					//start progress bar animation
 					progressBars = animateProgress();
 
-					//hide overlay
-
 					//pause noise
 					let pause = noise.pause();
 					if (pause !== undefined)
@@ -302,6 +305,7 @@
 
 					//play video
 					e.target.playVideo();
+					//hide overlay
 					document.getElementById('overlay').classList.add('hidden');
 					//add video id to history
 					history.push(e.target.getVideoData().video_id);
@@ -325,6 +329,7 @@
 				const seperator = pickRandom(seperators);
 				const number = getRandomNumberSuffix();
 				const query = `${prefix}${seperator}${number}`;
+				console.log(query);
 				return query;
 			}
 
