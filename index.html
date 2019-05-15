@@ -170,6 +170,7 @@
 			const prefixes = ['DSC', 'IMG', '100', 'VID', 'MVI', 'MOV', 'GOPR'];
 			const seperators = ['', ' ', '_'];
 			const noise = new Audio('noise.ogg');
+			noise.preload = 'auto';
 			noise.loop = true;
 
 			const tag = document.createElement('script');
@@ -229,15 +230,12 @@
 				console.log(state);
 
 				//load new playlist if video isn't playing after 4 sec
-				let timer;
 				if (state == UNSTARTED) {
-					timer = setTimeout(() => {
+					const timer = setTimeout(() => {
 						const _state = e.target.getPlayerState();
 						if (_state == UNSTARTED || _state == BUFFERING)
-							return onReady(e);
+							onReady(e);
 					}, 4000);
-				} else {
-					clearTimeout(timer);
 				}
 
 				if (state === ENDED) {
@@ -299,7 +297,6 @@
 				const seperator = pickRandom(seperators);
 				const number = getRandomNumberSuffix();
 				const query = `${prefix}${seperator}${number}`;
-				console.log(query);
 				return query;
 			}
 
