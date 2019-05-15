@@ -167,23 +167,20 @@
 			</div>
 		</div>
 		<script>
-			const tag = document.createElement('script');
-			tag.src = 'https://www.youtube.com/iframe_api';
-			const firstScriptTag = document.getElementsByTagName('script')[0];
-			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
 			const prefixes = ['DSC', 'IMG', '100', 'VID', 'MVI', 'MOV', 'GOPR'];
 			const seperators = ['', ' ', '_'];
 			const noise = new Audio('noise.ogg');
 			noise.loop = true;
 
+			const tag = document.createElement('script');
+			tag.src = 'https://www.youtube.com/iframe_api';
+			const firstScriptTag = document.getElementsByTagName('script')[0];
+			firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
 			let player;
 			const history = [];
-			/*
-			document
-				.getElementById('btn-next')
-				.addEventListener('click', () => player.nextVideo());
-			*/
+			let progressBars;
+			const progressBarIds = ['bar-top', 'bar-bottom'];
 
 			function onYouTubeIframeAPIReady() {
 				player = new YT.Player('player', {
@@ -210,6 +207,7 @@
 					.addEventListener('click', () => {
 						e.target.nextVideo();
 					});
+
 				e.target.loadPlaylist({
 					listType: 'search',
 					list: getRandomSearchString(),
@@ -219,7 +217,6 @@
 			}
 
 			function onStateChange(e) {
-				console.log(e);
 				const {
 					UNSTARTED,
 					ENDED,
@@ -229,77 +226,100 @@
 					CUED
 				} = YT.PlayerState;
 				const state = e.data;
-				const timer = setTimeout(() => {
-					if (e.target.getPlayerState() == UNSTARTED) onReady(e);
-				}, 4000);
+				console.log(state);
+
+				//load new playlist if video isn't playing after 4 sec
+				let timer;
+				if (state == UNSTARTED) {
+					timer = setTimeout(() => {
+						const _state = e.target.getPlayerState();
+						if (_state == UNSTARTED || _state == BUFFERING)
+							return onReady(e);
+					}, 4000);
+				} else {
+					clearTimeout(timer);
+				}
 
 				if (state === ENDED) {
 					return onReady(e);
 				}
 
+				//2 min max duration
 				if (state === PLAYING && e.target.getDuration() > 120) {
 					return e.target.nextVideo();
 				}
 
-				const elements = ['bar-top', 'bar-bottom'];
-
-				function animateProgress() {
-					elements
-						.map(element => document.getElementById(element))
-						.forEach(element => {
-							element.style.width = `${(player.getCurrentTime() /
-								player.getDuration()) *
-								100}%`;
-						});
-					requestAnimationFrame(animateProgress);
-				}
-
-				let bars;
-
 				if (state === PLAYING) {
+					//check if history includes next video
+					if (history.includes(e.target.getVideoData().video_id)) {
+						return onReady(e);
+					}
+
+					//output video id to div
 					document.getElementById(
 						'video-id'
 					).innerHTML = e.target.getVideoData().video_id;
-					bars = animateProgress();
 
-					if (history.includes(e.target.getVideoData().video_id))
-						return onReady(e);
+					//start progress bar animation
+					progressBars = animateProgress();
+
+					//hide overlay
 					document.getElementById('overlay').classList.add('hidden');
+
+					//pause noise
 					let pause = noise.pause();
 					if (pause !== undefined)
 						pause
 							.then(() => (noise.currentTime = 0))
 							.catch(error => {});
+
+					//play video
 					e.target.playVideo();
-					//progress.start();
+
+					//add video id to history
 					history.push(e.target.getVideoData().video_id);
 				} else {
-					window.cancelAnimationFrame(bars);
+					//cancel progressbar animation
+					window.cancelAnimationFrame(progressBars);
+
+					//play noise
 					play = noise.play();
 					if (play !== undefined)
 						play.then(() => {}).catch(error => {});
+
+					//show overlay
 					document
 						.getElementById('overlay')
 						.classList.remove('hidden');
-					//progress.clear();
 				}
 			}
 
 			function getRandomSearchString() {
 				const prefix = pickRandom(prefixes);
 				const seperator = pickRandom(seperators);
-				const number = getRandomFourDigitNumberString();
+				const number = getRandomNumberSuffix();
 				const query = `${prefix}${seperator}${number}`;
 				console.log(query);
 				return query;
 			}
 
-			function getRandomFourDigitNumberString() {
+			function getRandomNumberSuffix() {
 				return ((Math.random() * 9999) | 0).toString().padStart(4, '0');
 			}
 
 			function pickRandom(arr) {
 				return arr[(Math.random() * arr.length) | 0];
+			}
+
+			function animateProgress() {
+				progressBarIds
+					.map(element => document.getElementById(element))
+					.forEach(element => {
+						element.style.width = `${(player.getCurrentTime() /
+							player.getDuration()) *
+							100}%`;
+					});
+				requestAnimationFrame(animateProgress);
 			}
 		</script>
 	</body>
