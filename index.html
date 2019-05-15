@@ -260,8 +260,6 @@
 				} = YT.PlayerState;
 				const state = e.data;
 
-				//load new playlist if video isn't playing after 4 sec
-
 				clearTimeout(timer);
 				if (state == BUFFERING) {
 					timer = setTimeout(() => {
@@ -276,48 +274,41 @@
 					return onReady(e);
 				}
 
-				//2 min max duration
 				if (state === UNSTARTED && e.target.getDuration() > 120) {
 					return e.target.nextVideo();
 				}
 
 				if (state === PLAYING) {
 					console.log(e.target.getVideoData().video_id);
-					//check if history includes next video
+
 					if (history.includes(e.target.getVideoData().video_id)) {
 						return onReady(e);
 					}
 
-					//output video id to div
 					document.getElementById(
 						'video-id'
 					).innerHTML = e.target.getVideoData().video_id;
 
-					//start progress bar animation
 					progressBars = animateProgress();
 
-					//pause noise
 					let pause = noise.pause();
 					if (pause !== undefined)
 						pause
 							.then(() => (noise.currentTime = 0))
 							.catch(error => {});
 
-					//play video
 					e.target.playVideo();
-					//hide overlay
+
 					document.getElementById('overlay').classList.add('hidden');
-					//add video id to history
+
 					history.push(e.target.getVideoData().video_id);
 				} else {
-					//show overlay
 					document
 						.getElementById('overlay')
 						.classList.remove('hidden');
-					//cancel progressbar animation
+
 					window.cancelAnimationFrame(progressBars);
 
-					//play noise
 					play = noise.play();
 					if (play !== undefined)
 						play.then(() => {}).catch(error => {});
