@@ -129,6 +129,7 @@
 
 			.loading {
 				font-size: 2rem;
+				user-select: none;
 			}
 
 			#video-id {
@@ -136,7 +137,27 @@
 				top: 76px;
 				right: 16px;
 				font-size: 2rem;
-				z-index: 2;
+				z-index: 6;
+			}
+
+			#video-id::selection {
+				background: #f0f;
+			}
+
+			#start {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				position: absolute;
+				width: 100%;
+				height: 100%;
+				top: 0;
+				left: 0;
+				background: #000;
+				color: #fff;
+				z-index: 1337;
+				user-select: none;
+				cursor: pointer;
 			}
 
 			@media (max-width: 600px) {
@@ -152,11 +173,12 @@
 	</head>
 	<body>
 		<div id="app">
+			<div id="start">start</div>
 			<div id="video-id"></div>
 			<div id="overlay">
 				<span class="loading">loading random video</span>
 			</div>
-			<div id="block"></div>
+
 			<div class="player">
 				<div class="bar top"><div id="bar-top"></div></div>
 				<div id="player"></div>
@@ -183,7 +205,8 @@
 			let progressBars;
 			const progressBarIds = ['bar-top', 'bar-bottom'];
 
-			function onYouTubeIframeAPIReady() {
+			document.getElementById('start').addEventListener('click', e => {
+				e.target.classList.add('hidden');
 				player = new YT.Player('player', {
 					playerVars: {
 						rel: 0,
@@ -200,7 +223,7 @@
 						onStateChange
 					}
 				});
-			}
+			});
 
 			function onReady(e) {
 				document
@@ -261,7 +284,6 @@
 					progressBars = animateProgress();
 
 					//hide overlay
-					document.getElementById('overlay').classList.add('hidden');
 
 					//pause noise
 					let pause = noise.pause();
@@ -272,10 +294,14 @@
 
 					//play video
 					e.target.playVideo();
-
+					document.getElementById('overlay').classList.add('hidden');
 					//add video id to history
 					history.push(e.target.getVideoData().video_id);
 				} else {
+					//show overlay
+					document
+						.getElementById('overlay')
+						.classList.remove('hidden');
 					//cancel progressbar animation
 					window.cancelAnimationFrame(progressBars);
 
@@ -283,11 +309,6 @@
 					play = noise.play();
 					if (play !== undefined)
 						play.then(() => {}).catch(error => {});
-
-					//show overlay
-					document
-						.getElementById('overlay')
-						.classList.remove('hidden');
 				}
 			}
 
